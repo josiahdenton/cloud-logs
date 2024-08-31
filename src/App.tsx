@@ -1,72 +1,143 @@
 //import { useState } from "react";
-//import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from '@tauri-apps/api/tauri';
+//import { FaChevronUp, FaChevronDown } from 'react-icons/fa6';
+import Dropdown from './Dropdown';
+import Input from './Input';
+import { useEffect, useState } from 'react';
+import Modal from './Modal';
+import MultiSelect from './MultiSelect';
 
 function App() {
-    //const [greetMsg, setGreetMsg] = useState("");
-    //const [name, setName] = useState("");
+    const [profiles, setProfiles] = useState<string[]>([]);
+    const [newProfile, setNewProfile] = useState<string>('');
+    const [selectedProfile, setSelectedProfile] = useState<string>('');
+    const [logGroups, setLogGroups] = useState<string[]>([]);
+    const [selectedLogGroup, setSelectedLogGroup] = useState<string>('');
+    const [islogGroupModalOpen, setlogGroupModalOpen] =
+        useState<boolean>(false);
 
-    //async function greet() {
-    //  // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    //  setGreetMsg(await invoke("greet", { name }));
-    //}                       Cloud Logs
-    // ===============================================================
-    // [select account to search for logs]
-    // (x) us-east-1 (x) us-west-2
-    // ===============================================================
-    // [select log group(s) to search in]
-    // ===============================================================
-    // [textarea to input the query]
-    // (search / submit) (quick-cancel)
-    // ===============================================================
-    // (search for results - ripgrep)
-    // | @col 1 | @col 2 | @col 3 | @col 4 | @col 5 | @col 6 | @col 7 |
-    // |  ...   |  ...   |  ...   |  ...   |  ...   |  ...   |  ...   |
-    // |  ...   |  ...   |  ...   |  ...   |  ...   |  ...   |  ...   |
-    // |  ...   |  ...   |  ...   |  ...   |  ...   |  ...   |  ...   |
-    // |  ...   |  ...   |  ...   |  ...   |  ...   |  ...   |  ...   |
-    // |  ...   |  ...   |  ...   |  ...   |  ...   |  ...   |  ...   |
-    // ===============================================================
-    //
+    useEffect(() => {
+        //const controller = new AbortController();
+        const fetchProfiles = async () => {
+            const profiles = await invoke<string[]>('get_all_profile_options');
+            console.log('calling get_all_profile_options');
+            console.log(profiles);
+            setProfiles(profiles);
+        };
+        // I don't think there is a way to cancel the promise...????
+        fetchProfiles();
+
+        // NOTE: this is not available in tauri yet... see https://github.com/tauri-apps/tauri/issues/8351
+        // return () => {
+        //    controller.abort();
+        //};
+    }, []);
+
+    useEffect(() => {
+        const saveProfile = async () => {
+            if (newProfile) {
+                console.log('saving profile option', newProfile);
+                await invoke('save_profile_option', { profile: newProfile });
+            }
+        };
+        saveProfile();
+    }, [newProfile]);
+
+    // we want to select the profile
+    useEffect(() => {
+        const loadAwsProfile = async () => {
+            console.log('loading aws profile', selectedProfile);
+            await invoke('choose_profile', { profile: selectedProfile });
+            const groups = await invoke<string[]>('list_log_groups');
+            setLogGroups(groups);
+        };
+        loadAwsProfile();
+    }, [selectedProfile]);
+
+    useEffect(() => {
+        const chooseLogGroup = async () => {
+            await invoke('choose_log_group', { group: selectedLogGroup });
+        };
+        chooseLogGroup();
+    }, [selectedLogGroup]);
+
+    const mockLogGroups = [
+        'lambda/log-group/abc',
+        'lambda/log-group/123',
+        'lambda/log-group/xyz',
+        'lambda/log-group/456',
+    ];
+    //<br />
+    //<div className="flex flex-row justify-between">
+    //    <p>choose regions:</p>
+    //    <form>
+    //        <input
+    //            type="checkbox"
+    //            id="region-east"
+    //            className="accent-orange-800"
+    //        />
+    //        <label htmlFor="region-east"> us-east-1</label>
+    //        <br />
+    //        <input
+    //            type="checkbox"
+    //            id="region-west"
+    //            className="accent-orange-800"
+    //        />
+    //        <label htmlFor="region-west"> us-west-2</label>
+    //    </form>
+    //</div>
 
     return (
         <div className="flex gap-1 flex-row justify-center">
             <div className="flex flex-col justify-center">
-                <div className="text-center p-4 font-bold text-xl text-orange-600">
+                <div className="text-center p-4 font-bold text-xl text-teal-400">
                     Cloud Logs
                 </div>
-                <div>
+                <div className="py-2">
                     <div className="flex flex-row justify-between">
-                        <p>choose an account:</p>
-                        <select className="bg-orange-800 rounded-lg p-1">
-                            {/* FIXME: will need something other than a dropdown... not good when 50+ log groups */}
-                            <option>account #123</option>
-                            <option>account #456</option>
-                        </select>
-                    </div>
-                    <br />
-                    <div className="flex flex-row justify-between">
-                        <p>choose regions:</p>
-                        <form>
-                            <input
-                                type="checkbox"
-                                id="region-east"
-                                className="accent-orange-800"
-                            />
-                            <label htmlFor="region-east"> us-east-1</label>
-                            <br />
-                            <input
-                                type="checkbox"
-                                id="region-west"
-                                className="accent-orange-800"
-                            />
-                            <label htmlFor="region-west"> us-west-2</label>
-                        </form>
+                        <p>1. choose a profile:</p>
+                        <Dropdown
+                            options={profiles}
+                            optionAdded={(option) => setNewProfile(option)}
+                            optionSelected={(option) =>
+                                setSelectedProfile(option)
+                            }
+                        />
                     </div>
                 </div>
-                <div className="flex flex-row justify-center py-3">
-                    <button className="bg-orange-800 rounded p-2 hover:bg-orange-600 active:scale-95">
-                        add log group(s)
+                <div className="flex flex-row justify-between">
+                    <p>2. select log group</p>
+                    <button
+                        className="bg-gray-900 rounded shadow py-1 px-2 border border-gray-700 hover:bg-gray-800"
+                        onClick={() => setlogGroupModalOpen(true)}
+                    >
+                        + add
                     </button>
+                </div>
+                <div className="flex flex-row justify-center py-3">
+                    {/* TODO: change this to a SearchDropdown */}
+                    <Modal
+                        isOpen={islogGroupModalOpen}
+                        title="Log Groups"
+                        onClose={() => setlogGroupModalOpen(false)}
+                    >
+                        <div className="flex flex-col gap-4">
+                            {mockLogGroups.map((group, i) => {
+                                return (
+                                    <button
+                                        className="py-1 px-2 bg-gray-900 border shadow rounded border-gray-700 hover:bg-gray-600"
+                                        key={i}
+                                        onClick={() => {
+                                            setSelectedLogGroup(group);
+                                            setlogGroupModalOpen(false);
+                                        }}
+                                    >
+                                        {group}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </Modal>
                 </div>
                 <div>
                     <br />
@@ -77,10 +148,13 @@ function App() {
                         cols={50}
                         rows={5}
                         id="query"
-                        className="text-slate-900 bg-orange-800 p-2 rounded-xl"
+                        className="bg-gray-900 rounded shadow py-1 px-2 border border-gray-700 hover:bg-gray-800"
                     ></textarea>
                 </div>
-                <div>search results go here in a table</div>
+                <div className="py-2 flex fex-row justify-center">
+                    <span className="pr-2">search for logs</span>
+                    <Input />
+                </div>
             </div>
         </div>
     );
