@@ -61,12 +61,12 @@ function App() {
         chooseLogGroup();
     }, [selectedLogGroup]);
 
-    const mockLogGroups = [
-        'lambda/log-group/abc',
-        'lambda/log-group/123',
-        'lambda/log-group/xyz',
-        'lambda/log-group/456',
-    ];
+    //const mockLogGroups = [
+    //    'lambda/log-group/abc',
+    //    'lambda/log-group/123',
+    //    'lambda/log-group/xyz',
+    //    'lambda/log-group/456',
+    //];
     //<br />
     //<div className="flex flex-row justify-between">
     //    <p>choose regions:</p>
@@ -122,7 +122,7 @@ function App() {
                         onClose={() => setlogGroupModalOpen(false)}
                     >
                         <div className="flex flex-col gap-4">
-                            {mockLogGroups.map((group, i) => {
+                            {logGroups.map((group, i) => {
                                 return (
                                     <button
                                         className="py-1 px-2 bg-gray-900 border shadow rounded border-gray-700 hover:bg-gray-600"

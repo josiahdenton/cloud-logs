@@ -8,9 +8,9 @@ function Dropdown(props: {
     optionAdded?: (option: string) => void;
     optionSelected?: (option: string) => void;
 }) {
-    const [isDropdownOpen, toggleDropdown] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isAddOptionActive, toggleAddOption] = useState(false);
-    const [additionalOption, setAdditionalOption] = useState('');
+    const [newOption, setNewOption] = useState('');
     const [options, setOptions] = useState<string[]>([]);
 
     // NOTE: options is loaded async, so we have to instead have a hook to know
@@ -22,17 +22,24 @@ function Dropdown(props: {
     // TODO: should I even add to the options array?
     const handleAddOption = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key == 'Enter') {
-            setOptions((options) => [...options, additionalOption]);
+            setOptions((options) => [...options, newOption]);
             if (props.optionAdded) {
-                props.optionAdded(additionalOption);
+                props.optionAdded(newOption);
             }
-            setAdditionalOption('');
+            setNewOption('');
             toggleAddOption(false);
         }
     };
 
+    const handleSelect = (option: string) => {
+        if (props.optionSelected) {
+            props.optionSelected(option);
+        }
+        setIsDropdownOpen(false);
+    };
+
     const openDropdown = () => {
-        toggleDropdown((open) => !open);
+        setIsDropdownOpen((open) => !open);
     };
 
     const openAddMenuOption = () => {
@@ -57,7 +64,11 @@ function Dropdown(props: {
             {isDropdownOpen && (
                 <div className="absolute right-0 z-10 mt-2 border border-gray-700 bg-gray-900 min-w-36 text-right rounded shadow p-1 origin-top-right">
                     {options.map((option, i) => (
-                        <button className="hover:bg-gray-800 w-full text-nowrap" key={i}>
+                        <button
+                            className="hover:bg-gray-800 w-full text-nowrap"
+                            key={i}
+                            onClick={() => handleSelect(option)}
+                        >
                             {option}
                         </button>
                     ))}
@@ -67,10 +78,8 @@ function Dropdown(props: {
                                 autoFocus
                                 className="bg-gray-900 border border-gray-700 hover:bg-gray-800"
                                 type="text"
-                                value={additionalOption}
-                                onChange={(e) =>
-                                    setAdditionalOption(e.target.value)
-                                }
+                                value={newOption}
+                                onChange={(e) => setNewOption(e.target.value)}
                                 onKeyDown={handleAddOption}
                             />
                         ) : (

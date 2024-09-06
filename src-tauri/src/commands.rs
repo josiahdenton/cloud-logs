@@ -70,11 +70,10 @@ pub async fn list_log_groups(
     state: tauri::State<'_, Mutex<AppData>>,
 ) -> Result<Vec<String>, String> {
     let state = state.lock().await;
-    state
-        .search_engine
-        .list_log_groups()
-        .await
-        .map_err(|err| err.to_string())
+    state.search_engine.list_log_groups().await.map_err(|err| {
+        println!("{:?}", err);
+        err.to_string()
+    })
 }
 
 #[tauri::command]

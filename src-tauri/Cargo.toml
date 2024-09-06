@@ -19,6 +19,14 @@ aws-sdk-cloudwatchlogs = "1.41.0"
 mockall = "0.13.0"
 anyhow = "1.0.86"
 chrono = "0.4.38"
+aws-smithy-runtime = { version = "1.7.1", features = ["client", "tls-rustls"] }
+reqwest = "0.12.7"
+aws-smithy-experimental = "0.1.4"
+hyper-proxy2 = "0.1.0"
+hyper-util = { version = "0.1.7", features = ["client"] }
+hyper = { version = "1.4.1", features = ["client"] }
+headers = "0.4.0"
+url = "2.5.2"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
